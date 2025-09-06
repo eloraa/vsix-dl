@@ -1,91 +1,110 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import * as TabsPrimitive from "@radix-ui/react-tabs"
-import { useState, useRef, useEffect } from "react"
+import * as React from 'react';
+import * as TabsPrimitive from '@radix-ui/react-tabs';
+import { useState, useRef, useEffect } from 'react';
 
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
-const Tabs = TabsPrimitive.Root
+// Create a context to pass onValueChange to TabsList
+const TabsContext = React.createContext<{
+  onTabChange?: () => void;
+}>({});
 
-const TabsList = React.forwardRef<
-  React.ComponentRef<typeof TabsPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [hoverStyle, setHoverStyle] = useState({})
-  const [activeStyle, setActiveStyle] = useState({ left: "0px", width: "0px" })
-  const tabRefs = useRef<(HTMLElement | null)[]>([])
-  const listRef = useRef<HTMLDivElement>(null)
+const Tabs = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Root>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>>(({ onValueChange, ...props }, ref) => {
+  const [, setUpdateTrigger] = useState('');
 
-  // Update active index based on active tab
-  useEffect(() => {
+  const handleValueChange = (value: string) => {
+    onValueChange?.(value);
+    setUpdateTrigger(value);
+  };
+
+  const triggerTabListUpdate = () => {
+    setUpdateTrigger(prev => prev + 1);
+  };
+
+  return (
+    <TabsContext.Provider value={{ onTabChange: triggerTabListUpdate }}>
+      <TabsPrimitive.Root ref={ref} onValueChange={handleValueChange} {...props} />
+    </TabsContext.Provider>
+  );
+});
+Tabs.displayName = TabsPrimitive.Root.displayName;
+
+const TabsList = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.List>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>>(({ className, ...props }, ref) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [hoverStyle, setHoverStyle] = useState({});
+  const [activeStyle, setActiveStyle] = useState({ left: '0px', width: '0px' });
+  const tabRefs = useRef<(HTMLElement | null)[]>([]);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const updateActiveIndex = React.useCallback(() => {
     if (listRef.current) {
-      const activeTab = listRef.current.querySelector('[data-state="active"]')
+      const activeTab = listRef.current.querySelector('[data-state="active"]');
       if (activeTab) {
-        const tabs = Array.from(listRef.current.children).filter(
-          child => child.hasAttribute('data-state')
-        )
-        const newActiveIndex = tabs.indexOf(activeTab)
-        if (newActiveIndex !== -1) {
-          setActiveIndex(newActiveIndex)
+        const tabs = Array.from(listRef.current.children).filter(child => child.hasAttribute('data-state'));
+        const newActiveIndex = tabs.indexOf(activeTab);
+        if (newActiveIndex !== -1 && newActiveIndex !== activeIndex) {
+          setActiveIndex(newActiveIndex);
         }
       }
     }
-  })
+  }, [activeIndex]);
+
+  const { onTabChange } = React.useContext(TabsContext);
+  useEffect(() => {
+    updateActiveIndex();
+  }, [onTabChange, updateActiveIndex]);
 
   useEffect(() => {
     if (hoveredIndex !== null) {
-      const hoveredElement = tabRefs.current[hoveredIndex]
+      const hoveredElement = tabRefs.current[hoveredIndex];
       if (hoveredElement) {
-        const { offsetLeft, offsetWidth } = hoveredElement
+        const { offsetLeft, offsetWidth } = hoveredElement;
         setHoverStyle({
           left: `${offsetLeft}px`,
           width: `${offsetWidth}px`,
-        })
+        });
       }
     }
-  }, [hoveredIndex])
+  }, [hoveredIndex]);
 
   useEffect(() => {
-    const activeElement = tabRefs.current[activeIndex]
+    const activeElement = tabRefs.current[activeIndex];
     if (activeElement) {
-      const { offsetLeft, offsetWidth } = activeElement
+      const { offsetLeft, offsetWidth } = activeElement;
       setActiveStyle({
         left: `${offsetLeft}px`,
         width: `${offsetWidth}px`,
-      })
+      });
     }
-  }, [activeIndex])
+  }, [activeIndex]);
 
   useEffect(() => {
     requestAnimationFrame(() => {
-      const firstElement = tabRefs.current[0]
+      const firstElement = tabRefs.current[0];
       if (firstElement) {
-        const { offsetLeft, offsetWidth } = firstElement
+        const { offsetLeft, offsetWidth } = firstElement;
         setActiveStyle({
           left: `${offsetLeft}px`,
           width: `${offsetWidth}px`,
-        })
+        });
       }
-    })
-  }, [])
+    });
+  }, []);
 
   return (
     <TabsPrimitive.List
-      ref={(node) => {
-        listRef.current = node
+      ref={node => {
+        listRef.current = node;
         if (typeof ref === 'function') {
-          ref(node)
+          ref(node);
         } else if (ref) {
-          ref.current = node
+          ref.current = node;
         }
       }}
-      className={cn(
-        "relative inline-flex h-10 items-center justify-center text-muted-foreground",
-        className
-      )}
+      className={cn('relative inline-flex h-10 items-center justify-center text-muted-foreground', className)}
       {...props}
     >
       {/* Hover Highlight */}
@@ -98,79 +117,67 @@ const TabsList = React.forwardRef<
       />
 
       {/* Active Indicator */}
-      <div
-        className="absolute bottom-[-6px] h-[2px] bg-[#0e0f11] dark:bg-white transition-all duration-300 ease-out"
-        style={activeStyle}
-      />
+      <div className="absolute -bottom-[1.5px] h-[2px] bg-[#0e0f11] dark:bg-white transition-all duration-300 ease-out" style={activeStyle} />
 
       {/* Children with enhanced interaction */}
       {React.Children.map(props.children, (child, index) => {
         if (React.isValidElement(child)) {
-          const childElement = child as React.ReactElement<any>
+          const childElement = child as React.ReactElement<React.ComponentProps<'div'>>;
           return React.cloneElement(childElement, {
             ref: (el: HTMLElement | null) => {
-              tabRefs.current[index] = el
+              tabRefs.current[index] = el;
               // Forward original ref if it exists
-              const originalRef = (childElement as any).ref
+              const originalRef = (childElement as React.ReactElement & { ref?: React.Ref<HTMLElement> }).ref;
               if (originalRef) {
                 if (typeof originalRef === 'function') {
-                  originalRef(el)
+                  originalRef(el);
                 } else if (originalRef && 'current' in originalRef) {
-                  originalRef.current = el
+                  originalRef.current = el;
                 }
               }
             },
-            onMouseEnter: (e: React.MouseEvent) => {
-              setHoveredIndex(index)
-              const originalOnMouseEnter = childElement.props?.onMouseEnter
+            onMouseEnter: (e: React.MouseEvent<HTMLDivElement>) => {
+              setHoveredIndex(index);
+              const originalOnMouseEnter = childElement.props?.onMouseEnter;
               if (originalOnMouseEnter) {
-                originalOnMouseEnter(e)
+                (originalOnMouseEnter as (e: React.MouseEvent<HTMLDivElement>) => void)(e);
               }
             },
-            onMouseLeave: (e: React.MouseEvent) => {
-              setHoveredIndex(null)
-              const originalOnMouseLeave = childElement.props?.onMouseLeave
+            onMouseLeave: (e: React.MouseEvent<HTMLDivElement>) => {
+              setHoveredIndex(null);
+              const originalOnMouseLeave = childElement.props?.onMouseLeave;
               if (originalOnMouseLeave) {
-                originalOnMouseLeave(e)
+                (originalOnMouseLeave as (e: React.MouseEvent<HTMLDivElement>) => void)(e);
               }
             },
-          })
+          });
         }
-        return child
+        return child;
       })}
     </TabsPrimitive.List>
-  )
-})
-TabsList.displayName = TabsPrimitive.List.displayName
+  );
+});
+TabsList.displayName = TabsPrimitive.List.displayName;
 
-const TabsTrigger = React.forwardRef<
-  React.ComponentRef<typeof TabsPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, ...props }, ref) => (
+const TabsTrigger = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Trigger>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>>(({ className, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "relative inline-flex items-center justify-center whitespace-nowrap px-3 py-2 text-sm font-medium ring-offset-background transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground h-[30px]",
+      'relative inline-flex items-center justify-center whitespace-nowrap px-3 py-2 text-sm font-medium ring-offset-background transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground h-[30px]',
       className
     )}
     {...props}
   />
-))
-TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+));
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 
-const TabsContent = React.forwardRef<
-  React.ComponentRef<typeof TabsPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
->(({ className, ...props }, ref) => (
+const TabsContent = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Content>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>>(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      className
-    )}
+    className={cn('mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2', className)}
     {...props}
   />
-))
-TabsContent.displayName = TabsPrimitive.Content.displayName
+));
+TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export { Tabs, TabsList, TabsTrigger, TabsContent };

@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -113,10 +113,29 @@
 }
 
 @layer base {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  ::selection {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  ::-webkit-scrollbar {
+    @apply size-0.5 md:size-1;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-primary/30 transition-all;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-blue-700;
   }
 }
