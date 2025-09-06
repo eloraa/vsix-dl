@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, FileText, RefreshCw, Pause, Play, ExternalLink, PauseCircleIcon, CircleDashedIcon } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, RefreshCwIcon, PauseIcon, PlayIcon, ExternalLinkIcon, PauseCircleIcon, CircleDashedIcon } from 'lucide-react';
 import { cn, extractPackageName, extractPackageNames } from '@/lib/utils';
 
 export default function Home() {
@@ -129,7 +129,7 @@ export default function Home() {
         await new Promise(resolve => setTimeout(resolve, 1));
       }
 
-      const blob = new Blob(chunks);
+      const blob = new Blob(chunks as BlobPart[]);
 
       // Cache the blob in download list
       setDownloadList(prev => ({
@@ -288,7 +288,6 @@ export default function Home() {
     setMessage(`Download paused. Opening direct link for ${download.filename}...`);
   };
 
-
   const downloadSingle = async () => {
     if (!singleExtension) {
       setMessage('Please enter an extension name or URL');
@@ -399,10 +398,10 @@ export default function Home() {
 
     try {
       let validPackageIndex = 0;
-      
+
       for (let i = 0; i < extractedPackages.length; i++) {
         const packageName = extractedPackages[i];
-        
+
         if (!packageName.includes('.')) {
           failCount++;
           continue;
@@ -476,11 +475,11 @@ export default function Home() {
           <Tabs defaultValue="single" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2 border-b">
               <TabsTrigger value="single" className="flex items-center gap-2">
-                <Download className="h-4 w-4" />
+                <DownloadIcon className="h-4 w-4" />
                 Single Extension
               </TabsTrigger>
               <TabsTrigger value="multiple" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
+                <FileTextIcon className="h-4 w-4" />
                 Multiple Extensions
               </TabsTrigger>
             </TabsList>
@@ -514,7 +513,7 @@ export default function Home() {
                 </div>
 
                 <Button onClick={() => downloadSingle()} className="w-full !rounded-none cursor-pointer">
-                  <Download className="mr-2 h-4 w-4" />
+                  <DownloadIcon className="mr-2 h-4 w-4" />
                   Download Extension
                 </Button>
               </div>
@@ -549,7 +548,7 @@ export default function Home() {
                 </div>
 
                 <Button onClick={downloadMultiple} className="w-full !rounded-none cursor-pointer">
-                  <Download className="mr-2 h-4 w-4" />
+                  <DownloadIcon className="mr-2 h-4 w-4" />
                   Download All Extensions
                 </Button>
               </div>
@@ -604,12 +603,12 @@ export default function Home() {
                           <div className="flex items-center gap-2">
                             {!download.isPaused ? (
                               <Button onClick={() => pauseDownload(downloadId)} variant="ghost" className="size-6" size="icon">
-                                <Pause className="size-4" />
+                                <PauseIcon className="size-4" fill="currentColor" strokeWidth="0" />
                                 <span className="sr-only">Pause</span>
                               </Button>
                             ) : (
                               <Button onClick={() => resumeDownload(downloadId)} variant="ghost" className="size-6" size="icon">
-                                <Play className="size-4" />
+                                <PlayIcon className="size-4" />
                                 <span className="sr-only">Resume</span>
                               </Button>
                             )}
@@ -627,7 +626,7 @@ export default function Home() {
                               onClick={() => getDirectDownloadLink(downloadId)}
                               className="flex items-center gap-1 text-sm text-muted-foreground cursor-pointer hover:text-foreground"
                             >
-                              <ExternalLink className="mr-2 h-4 w-4" />
+                              <ExternalLinkIcon className="mr-2 h-4 w-4" />
                               Get Direct Link
                             </a>
                           )}
@@ -651,7 +650,7 @@ export default function Home() {
                           <span className="text-xs font-mono font-medium">{((download.blob.size || 0) / 1024 / 1024).toFixed(2)} MB</span>
                           <div className="flex gap-2 items-center">
                             <Button variant="ghost" size="sm" onClick={() => download.blob && redownloadCached(download.blob, download.filename)} className="h-auto py-1 !px-1 cursor-pointer">
-                              <RefreshCw className="h-4 w-4 mr-1" />
+                              <RefreshCwIcon className="h-4 w-4 mr-1" />
                               Redownload
                             </Button>
                             <Button variant="ghost" size="sm" className="h-auto py-1 !px-1 cursor-pointer hover:text-destructive text-muted-foreground" onClick={() => clearDirectDownload(downloadId)}>
@@ -665,7 +664,7 @@ export default function Home() {
                         <div className="flex gap-2">
                           <Button asChild variant="default" size="sm">
                             <a href={download.directDownloadUrl} download={download.filename}>
-                              <Download className="h-4 w-4 mr-1" />
+                              <DownloadIcon className="h-4 w-4 mr-1" />
                               Download
                             </a>
                           </Button>
