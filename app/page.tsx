@@ -470,8 +470,8 @@ export default function Home() {
 
   return (
     <div className="size-full flex items-center justify-center overflow-hidden">
-      <div className="mx-auto size-full flex items-center justify-center overflow-hidden min-h-0 max-h-full">
-        <div className="max-w-sm md:max-h-[calc(100%-5rem)] overflow-hidden md:border flex flex-col">
+      <div className="mx-auto size-full flex md:items-center justify-center overflow-hidden min-h-0 max-h-full">
+        <div className="md:max-w-sm md:max-h-[calc(100%-5rem)] overflow-hidden md:border flex flex-col">
           <Tabs defaultValue="single" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2 border-b">
               <TabsTrigger value="single" className="flex items-center gap-2">
